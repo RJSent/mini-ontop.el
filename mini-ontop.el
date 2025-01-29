@@ -114,9 +114,10 @@ Return t if point was moved, nil otherwise."
 
 (defun mini-ontop--move-point-up-if-needed-everywhere ()
   "For each live window, move point up if needed."
-  (setq mini-ontop--saved-positions nil)
-  (dolist (win (window-list))
-    (mini-ontop--move-point-up-for-window win)))
+  (when (= 0 (minibuffer-depth))        ;depth is 0 when advising
+    (setq mini-ontop--saved-positions nil)
+    (dolist (win (window-list))
+      (mini-ontop--move-point-up-for-window win))))
 
 (defun mini-ontop--restore-point ()
   "Restore the original point in all windows that were adjusted."
@@ -131,8 +132,9 @@ Return t if point was moved, nil otherwise."
 
 (defun mini-ontop--exit-hook (&rest _args)
   "Hook run upon minibuffer exit; restore points if needed."
-  (mini-ontop--restore-point)
-  (remove-hook 'minibuffer-exit-hook #'mini-ontop--exit-hook))
+  (when (= 1 (minibuffer-depth))        ;depth is 1 when using exit-hook
+    (mini-ontop--restore-point)
+    (remove-hook 'minibuffer-exit-hook #'mini-ontop--exit-hook)))
 
 (defun mini-ontop--teardown (&rest _args)
   "Run after `read-from-minibuffer`; remove the exit hook for cleanup."
